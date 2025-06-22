@@ -1,6 +1,6 @@
 # AI Task Manager
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Hits](https://hits.sh/github.com/Bakar31/ai-task-manager.svg)](https://hits.sh/github.com/Bakar31/ai-task-manager/)
 
 An AI-powered task management application that allows you to manage your tasks using natural language. Built with Streamlit, Groq, and SQLite.
 
