@@ -63,6 +63,9 @@ def add_task(
     """
     Add a new task to the database.
 
+    Note: The database automatically sets created_at and updated_at timestamps
+    using SQLite's CURRENT_TIMESTAMP.
+
     Args:
         title: The title of the task
         description: Optional description of the task
@@ -77,66 +80,131 @@ def add_task(
         cursor = conn.cursor()
         cursor.execute(
             """
-        INSERT INTO tasks (title, description, due_date, priority, status)
-        VALUES (?, ?, ?, ?, ?)
-        """,
+            -- created_at and updated_at are automatically set by the database
+            -- using DEFAULT CURRENT_TIMESTAMP in the schema
+            INSERT INTO tasks (title, description, due_date, priority, status)
+            VALUES (?, ?, ?, ?, ?)
+            """,
             (title, description, due_date, priority, status),
         )
         conn.commit()
         return cursor.lastrowid
 
 
-def update_task_status(task_id: int, new_status: str) -> bool:
+def update_task_status(task_id: int, new_status: str) -> Dict[str, Any]:
     """
-    Update the status of a task.
+    Update the status of a task and return the updated task details.
+
+    This function updates the task status and automatically sets the updated_at
+    timestamp to the current time. The database trigger 'update_task_timestamp'
+    ensures updated_at is always current on any update.
 
     Args:
         task_id: The ID of the task to update
         new_status: The new status ('todo', 'in progress', 'done')
 
     Returns:
-        bool: True if the update was successful, False otherwise
+        Dict containing:
+        - success: Boolean indicating if the update was successful
+        - message: Status message
+        - task: Dict containing all task fields including timestamps
+               (created_at, updated_at) in ISO 8601 format
+
+    Example:
+        {
+            "success": True,
+            "message": "Task status updated successfully",
+            "task": {
+                "id": 1,
+                "title": "Task title",
+                "status": "in progress",
+                "created_at": "2025-06-22 15:30:00",
+                "updated_at": "2025-06-22 16:45:00",
+                ...
+            }
+        }
     """
     with get_db_connection() as conn:
         cursor = conn.cursor()
+
+        # Update task status and set updated_at to current time
+        # The RETURNING clause returns the updated row
         cursor.execute(
             """
-        UPDATE tasks 
-        SET status = ? 
-        WHERE id = ?
-        """,
+            UPDATE tasks 
+            SET status = ?,
+                updated_at = datetime('now')
+            WHERE id = ?
+            RETURNING *  -- Returns all columns of the updated row
+            """,
             (new_status, task_id),
         )
+
+        # Fetch the updated task data
+        updated_task = cursor.fetchone()
         conn.commit()
-        return cursor.rowcount > 0
+
+        if not updated_task:
+            return {"success": False, "message": f"Task with ID {task_id} not found"}
+
+        # Convert SQLite Row to dict for easier handling
+        columns = [column[0] for column in cursor.description]
+        task_dict = dict(zip(columns, updated_task))
+
+        # SQLite returns datetime as string in ISO 8601 format
+        # No conversion needed as we want to keep it consistent
+
+        return {
+            "success": True,
+            "message": "Task status updated successfully",
+            "task": task_dict,  # Includes all task fields including timestamps
+        }
 
 
 def get_tasks_by_status(status: str) -> List[Dict[str, Any]]:
     """
-    Get all tasks with the given status.
+    Get all tasks with the given status, including all timestamps.
 
     Args:
         status: The status to filter by ('todo', 'in progress', 'done')
 
     Returns:
-        List[Dict[str, Any]]: A list of task dictionaries
+        List[Dict[str, Any]]: A list of task dictionaries with all fields including timestamps
+
+    Example:
+        >>> get_tasks_by_status('todo')
+        [
+            {
+                'id': 1,
+                'title': 'Task 1',
+                'description': 'Description',
+                'due_date': '2025-06-22',
+                'priority': 'medium',
+                'status': 'todo',
+                'created_at': '2025-06-22 15:30:00',
+                'updated_at': '2025-06-22 15:30:00'
+            },
+            ...
+        ]
     """
     with get_db_connection() as conn:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         cursor.execute(
             """
-        SELECT * FROM tasks 
-        WHERE status = ? 
-        ORDER BY 
-            CASE priority
-                WHEN 'high' THEN 1
-                WHEN 'medium' THEN 2
-                WHEN 'low' THEN 3
-                ELSE 4
-            END,
-            due_date ASC
-        """,
+            SELECT 
+                id, 
+                title, 
+                description, 
+                due_date, 
+                priority, 
+                status,
+                created_at,
+                updated_at
+            FROM tasks 
+            WHERE status = ?
+            ORDER BY created_at DESC
+            """,
             (status,),
         )
         return [dict(row) for row in cursor.fetchall()]

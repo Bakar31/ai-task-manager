@@ -23,32 +23,47 @@ class UpdateTaskStatusInput(BaseModel):
 
 def update_task_status(task_id: int, new_status: str) -> Dict[str, Any]:
     """
-    Update the status of an existing task.
+    Update the status of an existing task and return the updated task details.
 
     Args:
         task_id: The ID of the task to update
         new_status: The new status for the task (todo, in progress, done)
 
     Returns:
-        Dict containing the result of the operation
+        Dict containing the result of the operation and updated task details
 
     Example:
         >>> update_task_status(1, "in progress")
-        {'success': True, 'message': 'Task status updated successfully'}
+        {
+            'success': True,
+            'message': 'Task status updated successfully',
+            'task': {
+                'id': 1,
+                'title': 'Complete project',
+                'status': 'in progress',
+                'created_at': '2025-06-22 15:30:00',
+                'updated_at': '2025-06-22 16:45:00',
+                ...
+            }
+        }
     """
     try:
         task_input = UpdateTaskStatusInput(task_id=task_id, new_status=new_status)
-        success = db_update_task_status(
+        result = db_update_task_status(
             task_id=task_input.task_id, new_status=task_input.new_status
         )
 
-        if not success:
+        if not result.get("success"):
             return {
                 "success": False,
-                "message": f"Task with ID {task_input.task_id} not found",
+                "message": result.get("message", "Failed to update task status"),
             }
 
-        return {"success": True, "message": "Task status updated successfully"}
+        return {
+            "success": True,
+            "message": "Task status updated successfully",
+            "task": result.get("task", {}),
+        }
 
     except Exception as e:
         return {

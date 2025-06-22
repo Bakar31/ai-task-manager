@@ -53,7 +53,7 @@ def add_task(
     status: str = "todo",
 ) -> Dict[str, Any]:
     """
-    Add a new task to the task manager.
+    Add a new task to the task manager with proper datetime handling.
 
     Args:
         title: The title of the task
@@ -63,13 +63,21 @@ def add_task(
         status: Current status (todo, in progress, done)
 
     Returns:
-        Dict containing the result of the operation
+        Dict containing the result of the operation with task details
 
     Example:
         >>> add_task("Complete project", "Finish the AI assignment", "2023-12-31", "high")
-        {'success': True, 'task_id': 1, 'message': 'Task added successfully'}
+        {
+            'success': True,
+            'task_id': 1,
+            'message': 'Task added successfully',
+            'created_at': '2025-06-22 21:10:00',
+            'due_date': '2025-06-22'
+        }
     """
     try:
+        created_at = datetime.now().isoformat(sep=" ", timespec="seconds")
+
         task_input = AddTaskInput(
             title=title,
             description=description,
@@ -86,11 +94,17 @@ def add_task(
             status=task_input.status,
         )
 
-        return {
+        response = {
             "success": True,
             "task_id": task_id,
             "message": "Task added successfully",
+            "created_at": created_at,
         }
+
+        if due_date:
+            response["due_date"] = due_date
+
+        return response
 
     except Exception as e:
         return {

@@ -8,6 +8,7 @@ tools, and user interface for the AI Task Manager.
 import os
 import json
 from pathlib import Path
+from datetime import datetime
 from dotenv import load_dotenv
 import groq
 from groq import GroqError
@@ -48,6 +49,7 @@ class TaskManagerAgent:
 
             self.client = groq.Client(api_key=api_key)
             self.messages = []
+            self.tool_calls = []
             self.load_system_prompt()
             logger.info("TaskManagerAgent initialized successfully")
 
@@ -83,7 +85,7 @@ class TaskManagerAgent:
 
     def handle_tool_call(self, tool_call):
         """
-        Handle a single tool call.
+        Handle a single tool call with tracking for UI.
 
         Args:
             tool_call: The tool call to handle
@@ -119,6 +121,18 @@ class TaskManagerAgent:
             logger.error(f"{error_msg}. Raw arguments: {function_args_str}")
             return {"error": error_msg, "success": False}
 
+        tool_call_id = f"toolcall_{len(self.tool_calls) + 1}"
+        tool_call_info = {
+            "id": tool_call_id,
+            "name": function_name,
+            "args": function_args,
+            "status": "running",
+            "start_time": datetime.now().isoformat(),
+            "end_time": None,
+            "result": None,
+            "error": None,
+        }
+        self.tool_calls.append(tool_call_info)
         logger.info(f"Calling function: {function_name} with args: {function_args}")
 
         try:
@@ -135,18 +149,47 @@ class TaskManagerAgent:
                 logger.error(error_msg)
                 return {"error": error_msg, "success": False}
 
-            result = valid_functions[function_name](**function_args)
+            tool_call_info = next(
+                (t for t in self.tool_calls if t["id"] == tool_call_id), None
+            )
 
-            if not isinstance(result, dict):
-                result = {"result": result, "success": True}
+            try:
+                result = valid_functions[function_name](**function_args)
 
-            if "success" not in result:
-                result["success"] = True
+                if not isinstance(result, dict):
+                    result = {"result": result, "success": True}
 
-            logger.info(f"Function {function_name} completed successfully")
-            logger.debug(f"Function {function_name} result: {result}")
+                if "success" not in result:
+                    result["success"] = True
 
-            return result
+                if tool_call_info:
+                    tool_call_info.update(
+                        {
+                            "status": "completed",
+                            "end_time": datetime.now().isoformat(),
+                            "result": result,
+                            "success": True,
+                        }
+                    )
+
+                logger.info(f"Function {function_name} completed successfully")
+                logger.debug(f"Function {function_name} result: {result}")
+
+                return result
+
+            except Exception as e:
+                error_msg = str(e)
+                if tool_call_info:
+                    tool_call_info.update(
+                        {
+                            "status": "error",
+                            "end_time": datetime.now().isoformat(),
+                            "error": error_msg,
+                            "success": False,
+                        }
+                    )
+                logger.error(f"Error in function {function_name}: {error_msg}")
+                raise
 
         except TypeError as e:
             error_msg = f"Invalid arguments for {function_name}: {str(e)}"

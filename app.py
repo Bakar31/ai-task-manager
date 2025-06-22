@@ -6,6 +6,7 @@ using Streamlit.
 """
 
 import os
+from datetime import datetime
 import traceback
 import streamlit as st
 from dotenv import load_dotenv
@@ -58,6 +59,68 @@ def initialize_agent():
         st.stop()
 
 
+def format_timestamp(timestamp: str) -> str:
+    """
+    Format a timestamp string for display in the UI.
+
+    Args:
+        timestamp: The timestamp string to format (ISO 8601 format)
+
+    Returns:
+        Formatted date and time string
+    """
+    if not timestamp:
+        return ""
+    try:
+        dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        return dt.strftime("%b %d, %Y %H:%M")
+    except (ValueError, AttributeError):
+        return str(timestamp)
+
+
+def format_tool_call(tool_call):
+    """
+    Format a tool call for display in the UI with enhanced task information.
+
+    Args:
+        tool_call: Dictionary containing tool call information
+
+    Returns:
+        Formatted string with tool call details
+    """
+    status_emoji = {"running": "⏳", "completed": "✅", "error": "❌"}.get(
+        tool_call.get("status", ""), "❓"
+    )
+
+    task = tool_call.get("result", {}).get("task", {}) or {}
+
+    tool_name = tool_call.get("name", "unknown")
+    tool_info = f"{status_emoji} **{tool_name}**\n"
+
+    if tool_name in ["add_task", "update_task_status"] and task:
+        if "title" in task:
+            tool_info += f"\n📝 **{task['title']}**"
+        if "status" in task:
+            status_emoji = {"todo": "📋", "in progress": "🔄", "done": "✅"}.get(
+                task["status"].lower(), ""
+            )
+            tool_info += f"\n{status_emoji} Status: {task['status'].title()}"
+        if "created_at" in task:
+            tool_info += f"\n📅 Created: {format_timestamp(task['created_at'])}"
+        if "updated_at" in task and tool_name == "update_task_status":
+            tool_info += f"\n🔄 Updated: {format_timestamp(task['updated_at'])}"
+        if "due_date" in task and task.get("due_date"):
+            tool_info += f"\n⏰ Due: {format_timestamp(task['due_date'])}"
+
+    if tool_call.get("status") == "error":
+        if tool_call.get("error"):
+            tool_info += f"\n❌ **Error:** {tool_call['error']}"
+        tool_info += "\n\nPlease try again or contact support if the issue persists."
+    tool_info += "\n---"
+
+    return tool_info
+
+
 def display_chat():
     """
     Display the chat interface and handle user interactions.
@@ -68,19 +131,34 @@ def display_chat():
         st.title("AI Task Manager")
         st.caption("Talk to your AI assistant to manage your tasks")
 
-        # Display chat messages with error handling for each message
         for i, message in enumerate(st.session_state.messages):
             try:
-                with st.chat_message(message.get("role", "user")):
+                role = message.get("role", "user")
+                with st.chat_message(role):
+                    if role == "assistant" and "tool_calls" in message:
+                        for tool_call in message["tool_calls"]:
+                            st.markdown(f"🔧 **Tool Call:** {tool_call['name']}")
+                            st.json(tool_call["arguments"], expanded=False)
+                            if "output" in tool_call:
+                                st.markdown("📤 **Output:**")
+                                st.code(str(tool_call["output"]))
+
                     content = message.get("content", "")
-                    if not isinstance(content, str):
-                        content = str(content)
-                    st.markdown(content)
+                    if content:
+                        if not isinstance(content, str):
+                            content = str(content)
+                        st.markdown(content)
+
+                    if role == "assistant" and "tool_status" in message:
+                        with st.expander("🛠️ Tool Execution Status", expanded=False):
+                            for tool_call in message["tool_status"]:
+                                st.markdown(format_tool_call(tool_call))
+
             except Exception as e:
                 logger.error(f"Error displaying message {i}: {str(e)}")
                 logger.debug(f"Message content: {message}")
+                logger.debug(f"Traceback: {traceback.format_exc()}")
 
-        # Chat input with validation
         if prompt := st.chat_input("How can I help you with your tasks?"):
             try:
                 if not isinstance(prompt, str) or not prompt.strip():
@@ -100,15 +178,35 @@ def display_chat():
                         ):
                             raise RuntimeError("AI agent is not initialized")
 
+                        prev_tool_calls_count = len(
+                            getattr(st.session_state.agent, "tool_calls", [])
+                        )
                         response = st.session_state.agent.process_message(prompt)
 
                         if not response or not isinstance(response, str):
                             raise ValueError("Invalid response from AI agent")
 
-                        st.session_state.messages.append(
-                            {"role": "assistant", "content": response}
-                        )
+                        new_tool_calls = []
+                        if hasattr(st.session_state.agent, "tool_calls"):
+                            new_tool_calls = st.session_state.agent.tool_calls[
+                                prev_tool_calls_count:
+                            ]
+
+                        assistant_message = {
+                            "role": "assistant",
+                            "content": response,
+                        }
+
+                        if new_tool_calls:
+                            assistant_message["tool_status"] = new_tool_calls
+
+                        st.session_state.messages.append(assistant_message)
                         st.markdown(response)
+
+                        if new_tool_calls:
+                            with st.expander("🛠️ Tool Execution Status", expanded=True):
+                                for tool_call in new_tool_calls:
+                                    st.markdown(format_tool_call(tool_call))
 
                     except Exception as e:
                         error_msg = f"I'm sorry, I encountered an error processing your request: {str(e)}"
