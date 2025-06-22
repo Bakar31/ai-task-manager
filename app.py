@@ -9,7 +9,7 @@ import os
 import traceback
 import streamlit as st
 from dotenv import load_dotenv
-from main import TaskManagerAgent, TOOLS
+from main import TaskManagerAgent
 from logging_config import setup_logger
 
 logger = setup_logger("streamlit_ui")
@@ -141,42 +141,21 @@ def display_quick_actions():
     """
     try:
         st.sidebar.title("Quick Actions")
-
-        col1, col2 = st.sidebar.columns(2)
-
-        if col1.button("📝 Add Task"):
-            try:
-                st.session_state.show_chat = True
-                st.session_state.messages.append(
-                    {"role": "user", "content": "I want to add a new task"}
-                )
-                st.rerun()
-            except Exception as e:
-                logger.error(f"Error in Add Task button: {str(e)}")
-                st.sidebar.error("Failed to add a new task. Please try again.")
-
-        if col2.button("📊 View Tasks"):
-            try:
-                st.session_state.show_chat = True
-                st.session_state.messages.append(
-                    {"role": "user", "content": "Show me all my tasks"}
-                )
-                st.rerun()
-            except Exception as e:
-                logger.error(f"Error in View Tasks button: {str(e)}")
-                st.sidebar.error("Failed to view tasks. Please try again.")
-
-        if st.sidebar.button("📋 Generate Report"):
-            try:
-                st.session_state.show_chat = True
-                st.session_state.messages.append(
-                    {"role": "user", "content": "Generate a task report"}
-                )
-                st.rerun()
-            except Exception as e:
-                logger.error(f"Error in Generate Report button: {str(e)}")
-                st.sidebar.error("Failed to generate report. Please try again.")
-
+        st.sidebar.markdown(
+            """
+            <div style='font-size: 0.92rem; color: #555; margin-bottom: 0.5rem;'>
+                <b>Example messages:</b>
+                <ul style='margin: 0.3em 0 0 1.2em; padding: 0; font-size: 0.89rem;'>
+                    <li>Add a new task: <span style='color:#888;'>"Add task: Buy groceries"</span></li>
+                    <li>Show all tasks: <span style='color:#888;'>"Show me all my tasks"</span></li>
+                    <li>Mark task as done: <span style='color:#888;'>"Mark 'Buy groceries' as done"</span></li>
+                    <li>Change due date: <span style='color:#888;'>"Change the due date of 'Write report' to Friday"</span></li>
+                    <li>Generate report: <span style='color:#888;'>"Generate a weekly report"</span></li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         st.sidebar.divider()
 
         try:

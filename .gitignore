@@ -1,6 +1,8 @@
 .venv
 .env
 
+db/task_db.sqlite
+
 __pycache__
 
 logs
