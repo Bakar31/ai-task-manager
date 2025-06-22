@@ -5,22 +5,14 @@ This module provides a web-based interface for interacting with the AI Task Mana
 using Streamlit.
 """
 import os
-import json
-import logging
 import traceback
-from pathlib import Path
-from typing import Dict, Any, Optional, List
 import streamlit as st
 from dotenv import load_dotenv
-
-# Import the main application class
 from main import TaskManagerAgent, TOOLS
 from logging_config import setup_logger
 
-# Set up logging
 logger = setup_logger("streamlit_ui")
 
-# Configure page
 st.set_page_config(
     page_title="AI Task Manager",
     page_icon="✅",
@@ -28,10 +20,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Load environment variables
 load_dotenv()
 
-# Initialize session state
 if "agent" not in st.session_state:
     st.session_state.agent = None
 if "messages" not in st.session_state:

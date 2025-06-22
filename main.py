@@ -47,7 +47,6 @@ class TaskManagerAgent:
             
         except Exception as e:
             logger.error(f"Failed to initialize TaskManagerAgent: {str(e)}")
-            logger.debug(f"Traceback: {traceback.format_exc()}")
             raise
     
     def load_system_prompt(self):
@@ -68,7 +67,7 @@ class TaskManagerAgent:
             
         except Exception as e:
             logger.error(f"Failed to load system prompt: {str(e)}")
-            logger.debug(f"Traceback: {traceback.format_exc()}")
+            
             # Fallback to a default prompt if file loading fails
             self.system_prompt = """You are an AI Task Manager assistant. Help users manage their tasks efficiently.
             Be concise, helpful, and action-oriented in your responses."""
@@ -189,7 +188,7 @@ class TaskManagerAgent:
                 try:
                     # Get the model's response
                     response = self.client.chat.completions.create(
-                        model="mixtral-8x7b-32768",
+                        model=os.getenv("MODEL", "qwen-qwq-32b"),
                         messages=self.messages,
                         tools=TOOLS,
                         tool_choice="auto",

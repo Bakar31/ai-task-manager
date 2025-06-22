@@ -68,11 +68,13 @@ def update_task_status(task_id: int, new_status: str) -> Dict[str, Any]:
 
 # Tool definition for the LLM
 update_task_status_tool = {
-    "name": "update_task_status",
-    "description": "Update the status of an existing task",
-    "parameters": {
-        "type": "object",
-        "properties": {
+    "type": "function",
+    "function": {
+        "name": "update_task_status",
+        "description": "Update the status of an existing task",
+        "parameters": {
+            "type": "object",
+            "properties": {
             "task_id": {
                 "type": "integer",
                 "description": "The ID of the task to update"
@@ -83,7 +85,8 @@ update_task_status_tool = {
                 "description": "The new status for the task"
             }
         },
-        "required": ["task_id", "new_status"],
-        "additionalProperties": False
+            "required": ["task_id", "new_status"],
+            "additionalProperties": False
+        }
     }
 }

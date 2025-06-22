@@ -139,18 +139,21 @@ def generate_task_report(period: str = "daily") -> Dict[str, Any]:
 
 # Tool definition for the LLM
 generate_task_report_tool = {
-    "name": "generate_task_report",
-    "description": "Generate a task report for the specified time period",
-    "parameters": {
-        "type": "object",
-        "properties": {
+    "type": "function",
+    "function": {
+        "name": "generate_task_report",
+        "description": "Generate a task report for the specified time period",
+        "parameters": {
+            "type": "object",
+            "properties": {
             "period": {
                 "type": "string",
                 "enum": ["daily", "weekly", "monthly", "all"],
                 "description": "The time period for the report (default: daily)"
             }
         },
-        "required": [],
-        "additionalProperties": False
+            "required": [],
+            "additionalProperties": False
+        }
     }
 }

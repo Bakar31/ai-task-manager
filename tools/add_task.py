@@ -104,11 +104,13 @@ def add_task(
 
 # Tool definition for the LLM
 add_task_tool = {
-    "name": "add_task",
-    "description": "Add a new task to the task manager",
-    "parameters": {
-        "type": "object",
-        "properties": {
+    "type": "function",
+    "function": {
+        "name": "add_task",
+        "description": "Add a new task to the task manager",
+        "parameters": {
+            "type": "object",
+            "properties": {
             "title": {
                 "type": "string",
                 "description": "The title of the task"
@@ -132,7 +134,8 @@ add_task_tool = {
                 "description": "Current status of the task (default: todo)"
             }
         },
-        "required": ["title"],
-        "additionalProperties": False
+            "required": ["title"],
+            "additionalProperties": False
+        }
     }
 }

@@ -89,30 +89,36 @@ def get_all_tasks() -> Dict[str, Any]:
 
 # Tool definition for the LLM
 get_tasks_by_status_tool = {
-    "name": "get_tasks_by_status",
-    "description": "Get tasks filtered by their current status",
-    "parameters": {
-        "type": "object",
-        "properties": {
+    "type": "function",
+    "function": {
+        "name": "get_tasks_by_status",
+        "description": "Get tasks filtered by their current status",
+        "parameters": {
+            "type": "object",
+            "properties": {
             "status": {
                 "type": "string",
                 "enum": ["todo", "in progress", "done"],
                 "description": "The status to filter tasks by"
             }
         },
-        "required": ["status"],
-        "additionalProperties": False
+            "required": ["status"],
+            "additionalProperties": False
+        }
     }
 }
 
 # Additional tool definition to get all tasks
 get_all_tasks_tool = {
-    "name": "get_all_tasks",
-    "description": "Get all tasks grouped by their status",
-    "parameters": {
-        "type": "object",
-        "properties": {},
-        "required": [],
-        "additionalProperties": False
+    "type": "function",
+    "function": {
+        "name": "get_all_tasks",
+        "description": "Get all tasks grouped by their status",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False
+        }
     }
 }
