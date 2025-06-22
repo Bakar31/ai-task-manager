@@ -60,13 +60,25 @@ def get_all_tasks() -> Dict[str, Any]:
     Get all tasks regardless of status.
 
     Returns:
-        Dict containing all tasks grouped by status
+        Dict containing all tasks in a flat list with a 'status' field
+        Example:
+        {
+            'success': True,
+            'tasks': [
+                {'id': 1, 'title': 'Task 1', 'status': 'todo', ...},
+                {'id': 2, 'title': 'Task 2', 'status': 'in progress', ...},
+                ...
+            ]
+        }
     """
     try:
-        all_tasks = {}
+        all_tasks = []
         for status in ["todo", "in progress", "done"]:
             tasks = db_get_tasks_by_status(status)
-            all_tasks[status] = [dict(task) for task in tasks]
+            for task in tasks:
+                task_dict = dict(task)
+                task_dict["status"] = status  # Ensure status is set
+                all_tasks.append(task_dict)
 
         return {"success": True, "tasks": all_tasks}
 

@@ -154,7 +154,10 @@ class TaskManagerAgent:
             )
 
             try:
-                result = valid_functions[function_name](**function_args)
+                if function_name in ["get_all_tasks"]:
+                    result = valid_functions[function_name]()
+                else:
+                    result = valid_functions[function_name](**function_args)
 
                 if not isinstance(result, dict):
                     result = {"result": result, "success": True}
