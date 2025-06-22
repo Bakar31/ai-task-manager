@@ -251,14 +251,25 @@ def setup_page():
         initial_sidebar_state="expanded",
     )
 
-    st.markdown(
+    st.sidebar.markdown(
         """
-    <style>
-        .stAlert {margin-bottom: 1rem;}
-        .stAlert .stAlert-content {padding: 1rem;}
-        .stAlert .stAlert-content code {background: rgba(255, 43, 43, 0.1); padding: 0.2rem 0.4rem; border-radius: 0.2rem;}
-    </style>
-    """,
+        <div style="background: rgba(30, 30, 30, 0.9); padding: 0.6rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+            <div style="font-size: 0.9rem; font-weight: 600; color: #ffffff; margin-bottom: 0.2rem;">👨‍💻 Author</div>
+            <div style="font-size: 0.75rem; color: #b0b0b0; margin-bottom: 0.5rem;">Abu Bakar Siddik - Machine Learning Engineer</div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; gap: 0.5rem;">
+                <a href="mailto:abubakar1808031@gmail.com" style="color: #90caf9; text-decoration: none;" title="Email">✉️</a>
+                <a href="https://github.com/bakar31" target="_blank" style="color: #90caf9; text-decoration: none;" title="GitHub">GitHub</a>
+                <a href="https://linkedin.com/in/abu-bakar-siddik31" target="_blank" style="color: #90caf9; text-decoration: none;" title="LinkedIn">LinkedIn</a>
+            </div>
+        </div>
+        <style>
+            .stAlert {margin-bottom: 1rem;}
+            .stAlert .stAlert-content {padding: 1rem;}
+            .stAlert .stAlert-content code {background: rgba(255, 43, 43, 0.1); padding: 0.2rem 0.4rem; border-radius: 0.2rem;}
+            a {text-decoration: none; transition: opacity 0.2s;}
+            a:hover {opacity: 0.8;}
+        </style>
+        """,
         unsafe_allow_html=True,
     )
 
@@ -270,10 +281,8 @@ def main():
     Handles initialization, error handling, and the main application flow.
     """
     try:
-        # Set up the page
         setup_page()
 
-        # Initialize session state if needed
         if "messages" not in st.session_state:
             st.session_state.messages = []
         if "show_chat" not in st.session_state:
@@ -302,7 +311,6 @@ def main():
         logger.critical(error_msg, exc_info=True)
         st.error("A critical error occurred. Please refresh the page and try again.")
 
-    st.sidebar.markdown("---")
     st.sidebar.caption("AI Task Manager v1.0.0")
 
     if st.sidebar.button("🔄 Refresh Application"):
