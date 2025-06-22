@@ -6,6 +6,3 @@ db/task_db.sqlite
 __pycache__
 
 logs
-
-spec-doc.md
-example.py
