@@ -100,7 +100,6 @@ An AI-powered task manager where users can:
 ## 🗂️ Suggested Folder Structure:
 
 ```
-smart_task_agent/
 ├── main.py
 ├── tools/
 │   ├── add_task.py

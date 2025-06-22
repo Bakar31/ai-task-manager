@@ -1,0 +1,13 @@
+# Core Dependencies
+streamlit>=1.32.0
+groq>=0.4.0
+python-dotenv>=1.0.0
+
+# Database
+sqlite3>=2.6.0  # Included in Python standard library
+
+# Development
+pytest>=7.4.0
+black>=23.3.0
+flake8>=6.0.0
+mypy>=1.0.0
