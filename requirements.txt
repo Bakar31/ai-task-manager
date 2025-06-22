@@ -1,11 +1,4 @@
-# Core Dependencies
 streamlit
 groq
 python-dotenv
 pydantic
-
-# Development
-pytest
-black
-flake8
-mypy
