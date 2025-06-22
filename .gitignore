@@ -1,7 +1,9 @@
-venv
+.venv
 .env
 
 __pycache__
 
-# spec-doc.md
-# example.py
+logs
+
+spec-doc.md
+example.py

@@ -4,4 +4,8 @@ version = "0.1.0"
 description = "A task manager that uses AI to help users manage their tasks through natural language"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "groq>=0.28.0",
+    "python-dotenv>=1.1.0",
+    "streamlit>=1.46.0",
+]

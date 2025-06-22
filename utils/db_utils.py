@@ -138,5 +138,92 @@ def get_task_summary() -> Dict[str, int]:
                 
         return result
 
+def populate_sample_tasks() -> Dict[str, int]:
+    """
+    Populate the database with sample tasks for testing and development.
+    
+    Returns:
+        Dict[str, int]: A dictionary with the count of tasks added
+    """
+    sample_tasks = [
+        {
+            "title": "Complete AI assignment",
+            "description": "Finish the machine learning project for CS101",
+            "due_date": "2023-12-15",
+            "priority": "high",
+            "status": "todo"
+        },
+        {
+            "title": "Grocery shopping",
+            "description": "Buy milk, eggs, and bread",
+            "due_date": "2023-12-10",
+            "priority": "medium",
+            "status": "todo"
+        },
+        {
+            "title": "Call mom",
+            "description": "Wish her happy birthday",
+            "due_date": "2023-12-12",
+            "priority": "high",
+            "status": "in progress"
+        },
+        {
+            "title": "Read research paper",
+            "description": "Read the latest paper on transformers",
+            "due_date": "2023-12-20",
+            "priority": "low",
+            "status": "todo"
+        },
+        {
+            "title": "Submit expense report",
+            "description": "Submit monthly expenses to accounting",
+            "due_date": "2023-12-05",
+            "priority": "medium",
+            "status": "done"
+        }
+    ]
+    
+    added_count = 0
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        # First, check if we already have any tasks to avoid duplicates
+        cursor.execute("SELECT COUNT(*) FROM tasks")
+        if cursor.fetchone()[0] == 0:
+            for task in sample_tasks:
+                cursor.execute('''
+                INSERT INTO tasks (title, description, due_date, priority, status)
+                VALUES (?, ?, ?, ?, ?)
+                ''', (
+                    task["title"],
+                    task["description"],
+                    task["due_date"],
+                    task["priority"],
+                    task["status"]
+                ))
+                added_count += 1
+            conn.commit()
+    
+    return {"tasks_added": added_count}
+
+
+def clear_all_tasks() -> Dict[str, int]:
+    """
+    Remove all tasks from the database.
+    
+    Returns:
+        Dict[str, int]: A dictionary with the count of tasks removed
+    """
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM tasks")
+        count = cursor.fetchone()[0]
+        cursor.execute("DELETE FROM tasks")
+        conn.commit()
+    return {"tasks_removed": count}
+
+
 # Initialize the database when this module is imported
 init_db()
+
+# Uncomment the following line to populate with sample data when the module is imported
+# populate_sample_tasks()
